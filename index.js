@@ -1,27 +1,26 @@
-const { square, triangle, circle } = require("./lib/shapes.js");
+const { Square, Triangle, Circle } = require("./lib/shapes");
 const fs = require("fs");
 const inquirer = require("inquirer");
 
 function writeToFile(fileName, answers, callback) {
-  let svg = `
+  const shape =
+    answers.shape === "square"
+      ? new Square()
+      : answers.shape === "triangle"
+      ? new Triangle()
+      : new Circle();
+
+  shape.setColor(answers.bgColor);
+
+  const svg = `
       <svg version="1.1" width="300" height="200">
         <g>
-          ${answers.shape}
-    `;
-  let shape;
-  if (answers.shape === "square") {
-    shape = new square();
-    svg += `<rect width="200" height="200" fill="${answers.bgColor}"/>`;
-  } else if (answers.shape === "triangle") {
-    shape = new triangle();
-    svg += `<polygon points="150, 18 244, 182 56, 182" fill="${answers.bgColor}"/>`;
-  } else {
-    shape = new circle();
-    svg += `<circle cx="100" cy="100" r="90" fill="${answers.bgColor}"/>`;
-  }
-  svg += `<text x="105" y="110" text-anchor="middle" font-size="40" fill="${answers.color}">${answers.text}</text>
-      </g>
-    </svg>`;
+          ${shape.draw()}
+          <text x="105" y="110" text-anchor="middle" font-size="40" fill="${
+            answers.color
+          }">${answers.text}</text>
+        </g>
+      </svg>`;
 
   fs.writeFile(fileName, svg, (err) => {
     if (err) {
@@ -38,30 +37,29 @@ function promptUser(callback) {
     .prompt([
       {
         name: "text",
-        message: "Choose the 3 letters you want on your logo",
+        message: "What 3 letters you want on your logo?",
         type: "input",
       },
       {
         name: "color",
-        message:
-          "Choose the color you would like to use for the letters chosen",
+        message: "What color would you like to use for the letters?",
         type: "input",
       },
       {
         name: "shape",
-        message: "Choose which shape you would like to use for your logo?",
+        message: "What shape would you like to use for your logo?",
         choices: ["square", "triangle", "circle"],
         type: "list",
       },
       {
         name: "bgColor",
-        message: "Choose the background color for your shape",
+        message: "What color do you want your shape to be?",
         type: "input",
       },
     ])
     .then((answers) => {
       if (answers.text.length > 3) {
-        console.log("Must enter more than 3 characters");
+        console.log("Must enter no more than 3 characters");
         promptUser(callback);
       } else {
         writeToFile("logo.svg", answers, callback);
